@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Start the docker container moto backend
+      run : |
+        docker run --rm -it -p 5000:5000 --name moto_backend -d motoserver/moto:latest
+
+    - name: Configure fake AWS credentials and run terraform apply
+      run : |
+        export AWS_CONFIG_FILE=$(pwd)/config.txt
+        export AWS_SHARED_CREDENTIALS_FILE=$(pwd)/creds.txt
+        export AWS_PROFILE=demo
+        terraform init
+        terraform apply -auto-approve
+
+    - name: Run an AWS CLI command against the moto server to verify the creation of the resource
+      run : |
+        export AWS_CONFIG_FILE=$(pwd)/config.txt
+        export AWS_SHARED_CREDENTIALS_FILE=$(pwd)/creds.txt
+        export AWS_PROFILE=demo
+        aws ec2 describe-instances --region us-east-1 --endpoint-url http://localhost:5000

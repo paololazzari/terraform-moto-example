@@ -1,0 +1,7 @@
+[demo]
+region = us-east-1
+output = json
+
+[profile demo]
+ec2 =
+    endpoint_url = http://localhost:5000/
